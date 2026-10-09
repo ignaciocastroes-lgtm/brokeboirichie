@@ -1,6 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Antonio, IBM_Plex_Mono } from 'next/font/google'
+import { Antonio, IBM_Plex_Mono, VT323 } from 'next/font/google'
 import './globals.css'
 
 const display = Antonio({
@@ -14,6 +14,14 @@ const mono = IBM_Plex_Mono({
   subsets: ['latin'],
   weight: ['300', '400', '500'],
   variable: '--font-mono-body',
+  display: 'swap',
+})
+
+/** Fuente LCD/terminal — para el display del mezclador estilo Winamp/Napster clásico. */
+const lcd = VT323({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-lcd-face',
   display: 'swap',
 })
 
@@ -49,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={`${display.variable} ${mono.variable} bg-background`}>
+    <html lang="es" className={`${display.variable} ${mono.variable} ${lcd.variable} bg-background`}>
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

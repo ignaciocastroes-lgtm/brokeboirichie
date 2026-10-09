@@ -23,6 +23,10 @@ import { Vinyl } from './vinyl'
  * parte del álbum REX en Apple Music, así que esta API no trae su preview.
  * Para esos, el botón manda directo a YouTube / ONErpm hasta que estén
  * distribuidos también en streaming.
+ *
+ * SKIN (2026-10-09): chasis estilo Winamp/Napster clásico (clases `winamp-*`
+ * de app/globals.css) sobre la base Nocturnal Plugg — es solo la capa
+ * visual, toda la lógica de audio de arriba queda intacta.
  */
 
 type DeckId = 'A' | 'B'
@@ -70,82 +74,114 @@ function useDeck(deckId: DeckId, tracks: ItunesTrack[], initialIndex: number) {
   return { deckId, audioRef, track, index, isPlaying, rate, setIsPlaying, togglePlay, changeRate, changeTrack }
 }
 
+/** 5 barras tipo ecualizador de Winamp — solo se mueven mientras el deck suena. */
+function EqBars({ active }: { active: boolean }) {
+  const delays = [0, 0.12, 0.06, 0.18, 0.09]
+  return (
+    <div className="flex h-4 items-end gap-[3px]" aria-hidden="true">
+      {delays.map((delay, i) => (
+        <span
+          key={i}
+          className="eq-bar w-[3px] rounded-[1px] bg-[var(--y2k-celestite)]"
+          style={{
+            height: active ? '100%' : '15%',
+            animationDelay: `${delay}s`,
+            animationPlayState: active ? 'running' : 'paused',
+            opacity: active ? 0.9 : 0.3,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function DeckPanel({ deck, label, tracks }: { deck: ReturnType<typeof useDeck>; label: string; tracks: ItunesTrack[] }) {
   const activeMode = PITCH_MODES.find((m) => m.rate === deck.rate) ?? PITCH_MODES[1]
   const canPlay = Boolean(deck.track?.previewUrl)
 
   return (
-    <div className="glass flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
-      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-        <span>Deck {label}</span>
-        {deck.isPlaying && <span className="text-primary">● Live</span>}
+    <div className="winamp-shell flex flex-col overflow-hidden">
+      <div className="winamp-titlebar">
+        <div className="winamp-dots">
+          <span className="winamp-dot" />
+          <span className="winamp-dot" />
+          <span className="winamp-dot" />
+        </div>
+        <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-white/90">Deck {label}</span>
+        <EqBars active={deck.isPlaying} />
       </div>
 
-      <div className="mx-auto w-full max-w-[220px]">
-        <Vinyl isPlaying={deck.isPlaying} rate={deck.rate} />
-      </div>
+      <div className="flex flex-col gap-4 p-4 sm:p-5">
+        <div className="mx-auto w-full max-w-[200px]">
+          <Vinyl isPlaying={deck.isPlaying} rate={deck.rate} />
+        </div>
 
-      {deck.track?.previewUrl && (
-        <audio
-          ref={deck.audioRef}
-          src={deck.track.previewUrl}
-          preload="metadata"
-          onPlay={() => deck.setIsPlaying(true)}
-          onPause={() => deck.setIsPlaying(false)}
-          onEnded={() => deck.setIsPlaying(false)}
-        />
-      )}
+        {deck.track?.previewUrl && (
+          <audio
+            ref={deck.audioRef}
+            src={deck.track.previewUrl}
+            preload="metadata"
+            onPlay={() => deck.setIsPlaying(true)}
+            onPause={() => deck.setIsPlaying(false)}
+            onEnded={() => deck.setIsPlaying(false)}
+          />
+        )}
 
-      <select
-        value={deck.index}
-        onChange={(e) => deck.changeTrack(Number(e.target.value))}
-        className="w-full rounded-full border border-white/[0.08] bg-transparent px-4 py-2 font-mono text-xs uppercase tracking-[0.1em] text-foreground"
-      >
-        {tracks.map((t, i) => (
-          <option key={t.id} value={i} className="bg-background text-foreground" disabled={!t.previewUrl}>
-            {t.title}
-            {!t.previewUrl ? ' (sin preview)' : ''}
-          </option>
-        ))}
-      </select>
+        <div className="winamp-lcd flex flex-col gap-0.5 px-3 py-2">
+          <p className="truncate text-2xl leading-none">{deck.track ? deck.track.title : 'NO SIGNAL —'}</p>
+          <p className="text-sm uppercase leading-none tracking-[0.1em] opacity-70">
+            {deck.isPlaying ? '▸ PLAYING' : '❚❚ PAUSED'} · {activeMode.short.toUpperCase()} · {deck.rate.toFixed(2)}X
+          </p>
+        </div>
 
-      {!canPlay && (
-        <p className="font-mono text-[10px] leading-relaxed text-primary">
-          Apple no devolvió preview para este tema ahora mismo — prueba otro o reintenta en unos minutos.
-        </p>
-      )}
-
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={deck.togglePlay}
-          disabled={!canPlay}
-          aria-label={deck.isPlaying ? `Pausar deck ${label}` : `Reproducir deck ${label}`}
-          className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 disabled:opacity-40"
+        <select
+          value={deck.index}
+          onChange={(e) => deck.changeTrack(Number(e.target.value))}
+          className="winamp-well w-full px-3 py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-foreground"
         >
-          {deck.isPlaying ? <Pause className="size-5" aria-hidden="true" /> : <Play className="size-5 translate-x-px" aria-hidden="true" />}
-        </button>
+          {tracks.map((t, i) => (
+            <option key={t.id} value={i} className="bg-background text-foreground" disabled={!t.previewUrl}>
+              {t.title}
+              {!t.previewUrl ? ' (sin preview)' : ''}
+            </option>
+          ))}
+        </select>
 
-        <div className="grid flex-1 grid-cols-3 gap-2 rounded-full border border-white/[0.08] p-1">
-          {PITCH_MODES.map((mode) => {
-            const active = mode.rate === deck.rate
-            return (
-              <button
-                key={mode.rate}
-                type="button"
-                aria-pressed={active}
-                onClick={() => deck.changeRate(mode.rate)}
-                className={`flex min-h-9 flex-col items-center justify-center rounded-full font-mono text-[10px] uppercase transition-colors ${
-                  active ? 'bg-midnight text-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {mode.short}
-              </button>
-            )
-          })}
+        {!canPlay && (
+          <p className="font-mono text-[10px] leading-relaxed text-primary">
+            Apple no devolvió preview para este tema ahora mismo — prueba otro o reintenta en unos minutos.
+          </p>
+        )}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={deck.togglePlay}
+            disabled={!canPlay}
+            aria-label={deck.isPlaying ? `Pausar deck ${label}` : `Reproducir deck ${label}`}
+            className="winamp-btn inline-flex size-11 shrink-0 items-center justify-center text-foreground transition-transform active:scale-95 disabled:opacity-40"
+          >
+            {deck.isPlaying ? <Pause className="size-4" aria-hidden="true" /> : <Play className="size-4 translate-x-px" aria-hidden="true" />}
+          </button>
+
+          <div className="grid flex-1 grid-cols-3 gap-1.5">
+            {PITCH_MODES.map((mode) => {
+              const active = mode.rate === deck.rate
+              return (
+                <button
+                  key={mode.rate}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => deck.changeRate(mode.rate)}
+                  className="winamp-btn flex min-h-9 flex-col items-center justify-center font-mono text-[9px] uppercase tracking-[0.08em] text-muted-foreground transition-colors"
+                >
+                  {mode.short}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
-      <p className="text-right font-mono text-[10px] text-muted-foreground">[{activeMode.label}]</p>
     </div>
   )
 }
@@ -216,21 +252,34 @@ export function DualDeckTurntable() {
             <DeckPanel deck={deckB} label="B" tracks={tracks} />
           </div>
 
-          <div className="glass mt-6 flex flex-col items-center gap-3 rounded-2xl p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Crossfader</p>
-            <div className="flex w-full max-w-md items-center gap-4">
-              <span className="font-mono text-xs text-muted-foreground">A</span>
-              <input
-                type="range"
-                min={-1}
-                max={1}
-                step={0.01}
-                value={crossfader}
-                onChange={(e) => handleCrossfader(Number(e.target.value))}
-                aria-label="Crossfader entre Deck A y Deck B"
-                className="deck-range w-full"
-              />
-              <span className="font-mono text-xs text-muted-foreground">B</span>
+          <div className="winamp-shell mt-6 overflow-hidden">
+            <div className="winamp-titlebar">
+              <div className="winamp-dots">
+                <span className="winamp-dot" />
+                <span className="winamp-dot" />
+                <span className="winamp-dot" />
+              </div>
+              <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-white/90">Mixer</span>
+              <span className="font-mono text-[10px] text-white/70">v1.0</span>
+            </div>
+            <div className="flex flex-col items-center gap-3 p-5">
+              <div className="winamp-lcd w-full max-w-xs px-3 py-1.5 text-center text-lg">
+                CROSSFADER {crossfader === 0 ? 'CENTER' : crossfader < 0 ? `A ${Math.round(-crossfader * 100)}%` : `B ${Math.round(crossfader * 100)}%`}
+              </div>
+              <div className="flex w-full max-w-md items-center gap-4">
+                <span className="font-mono text-xs text-muted-foreground">A</span>
+                <input
+                  type="range"
+                  min={-1}
+                  max={1}
+                  step={0.01}
+                  value={crossfader}
+                  onChange={(e) => handleCrossfader(Number(e.target.value))}
+                  aria-label="Crossfader entre Deck A y Deck B"
+                  className="winamp-range w-full"
+                />
+                <span className="font-mono text-xs text-muted-foreground">B</span>
+              </div>
             </div>
           </div>
         </>

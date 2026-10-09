@@ -8,6 +8,7 @@
   --font-sans: var(--font-mono-body), ui-monospace, monospace;
   --font-mono: var(--font-mono-body), ui-monospace, monospace;
   --font-display: var(--font-display-face), 'Arial Narrow', sans-serif;
+  --font-lcd: var(--font-lcd-face), ui-monospace, monospace;
 
   --color-live: var(--live);
   --color-midnight: var(--midnight);
@@ -149,6 +150,136 @@
   .deck-range:disabled {
     cursor: not-allowed;
     opacity: 0.4;
+  }
+
+  /*
+   * Skin "mezclador" estilo Winamp/Napster clásico (acordado 2026-10-09) — chasis metálico
+   * biselado, display LCD con fuente de terminal, botones y sliders tipo consola. Vive sobre la
+   * misma base oscura Nocturnal Plugg, con los acentos Y2K (Celestite Blue / Astra Violet) en la
+   * barra de título y el brillo del LCD.
+   */
+  .winamp-shell {
+    border-radius: 6px;
+    background: linear-gradient(180deg, #3c414d 0%, #24272f 8%, #15161b 100%);
+    box-shadow:
+      inset 1px 1px 0 rgb(255 255 255 / 0.14),
+      inset -1px -1px 0 rgb(0 0 0 / 0.65),
+      0 10px 30px -8px rgb(0 0 0 / 0.65);
+  }
+  .winamp-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 6px 6px 0 0;
+    background: linear-gradient(90deg, var(--y2k-astra) 0%, var(--primary) 55%, var(--y2k-celestite) 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(0 0 0 / 0.4);
+  }
+  .winamp-dots {
+    display: flex;
+    gap: 4px;
+  }
+  .winamp-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 1px;
+    background: rgb(0 0 0 / 0.3);
+    box-shadow: inset 1px 1px 0 rgb(255 255 255 / 0.35);
+  }
+  .winamp-lcd {
+    position: relative;
+    overflow: hidden;
+    background: #060a06;
+    border-radius: 2px;
+    box-shadow:
+      inset 2px 2px 5px rgb(0 0 0 / 0.85),
+      inset -1px -1px 0 rgb(255 255 255 / 0.05);
+    color: var(--y2k-celestite);
+    font-family: var(--font-lcd);
+    text-shadow: 0 0 6px rgb(0 191 255 / 0.65);
+  }
+  .winamp-lcd::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.35) 0 1px, transparent 1px 3px);
+  }
+  .winamp-btn {
+    background: linear-gradient(180deg, #4b505c, #282b32);
+    border-radius: 3px;
+    box-shadow:
+      inset 1px 1px 0 rgb(255 255 255 / 0.22),
+      inset -1px -1px 0 rgb(0 0 0 / 0.55);
+  }
+  .winamp-btn:active {
+    background: linear-gradient(180deg, #282b32, #4b505c);
+    box-shadow:
+      inset 1px 1px 0 rgb(0 0 0 / 0.6),
+      inset -1px -1px 0 rgb(255 255 255 / 0.12);
+  }
+  .winamp-btn[aria-pressed='true'] {
+    background: linear-gradient(180deg, var(--y2k-astra), #2a2140);
+    box-shadow:
+      inset 1px 1px 0 rgb(0 0 0 / 0.5),
+      inset -1px -1px 0 rgb(0 191 255 / 0.3),
+      0 0 10px rgb(0 191 255 / 0.35);
+    color: var(--y2k-celestite);
+  }
+  .winamp-well {
+    background: linear-gradient(180deg, #121419, #1b1e26);
+    border-radius: 3px;
+    box-shadow:
+      inset 2px 2px 4px rgb(0 0 0 / 0.75),
+      inset -1px -1px 0 rgb(255 255 255 / 0.06);
+  }
+  /* Slider grueso tipo consola, para el crossfader y el pitch */
+  .winamp-range {
+    appearance: none;
+    height: 1.1rem;
+    background: transparent;
+    cursor: pointer;
+  }
+  .winamp-range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #0a0c10, #1c2028);
+    box-shadow: inset 1px 1px 3px rgb(0 0 0 / 0.8), inset -1px -1px 0 rgb(255 255 255 / 0.05);
+  }
+  .winamp-range::-moz-range-track {
+    height: 6px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #0a0c10, #1c2028);
+    box-shadow: inset 1px 1px 3px rgb(0 0 0 / 0.8), inset -1px -1px 0 rgb(255 255 255 / 0.05);
+  }
+  .winamp-range::-webkit-slider-thumb {
+    appearance: none;
+    margin-top: -7px;
+    width: 14px;
+    height: 20px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #e2e4ec, #9aa0b4);
+    box-shadow:
+      inset 1px 1px 0 rgb(255 255 255 / 0.7),
+      inset -1px -1px 0 rgb(0 0 0 / 0.4),
+      0 0 8px rgb(0 191 255 / 0.45);
+    border: 1px solid #000;
+  }
+  .winamp-range::-moz-range-thumb {
+    width: 14px;
+    height: 20px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #e2e4ec, #9aa0b4);
+    box-shadow:
+      inset 1px 1px 0 rgb(255 255 255 / 0.7),
+      inset -1px -1px 0 rgb(0 0 0 / 0.4),
+      0 0 8px rgb(0 191 255 / 0.45);
+    border: 1px solid #000;
+  }
+  .winamp-range:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
   }
 }
 
