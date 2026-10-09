@@ -1,33 +1,36 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { getLatestIntro } from '@/lib/intros'
 
 const SEEN_KEY = 'brokeboirichie:intro-seen'
 
 /**
- * ENTRADA DE ÉPOCA — una sola vez por sesión.
+ * ENTRADA DE ÉPOCA — una sola vez por sesión, con el clip del último lanzamiento.
  * -----------------------------------------------------------------------
- * /public/intro/intro-brokeboirichie.mp4 = video del oso (8s) + los 8 segundos
- * más intensos/melódicos de "Old Money" muxeados como pista de audio.
+ * Lee `getLatestIntro()` (lib/intros.ts), que a su vez sigue a `LATEST_RELEASE` de
+ * lib/site-data.ts: cuando el artista saca un tema nuevo y se agrega su clip, esta intro cambia
+ * sola sin tocar este archivo. Si todavía no hay clip para el último lanzamiento, el componente
+ * no renderiza nada — nunca bloquea el sitio con un video vencido o inexistente.
  *
- * Por qué hay un botón "Entrar" antes de reproducir con sonido:
- * los navegadores (Safari, Chrome en iOS/Android, y el navegador interno de
- * Instagram) BLOQUEAN el autoplay con audio sin que el usuario haya tocado
- * la pantalla primero. No hay forma de saltarse esto con código: siempre
- * hace falta un gesto del usuario antes de que suene el audio.
+ * Por qué hay un botón "Entrar" antes de reproducir con sonido: los navegadores (Safari, Chrome
+ * en iOS/Android, y el navegador interno de Instagram) BLOQUEAN el autoplay con audio sin que el
+ * usuario haya tocado la pantalla primero. No hay forma de saltarse esto con código: siempre hace
+ * falta un gesto del usuario antes de que suene el audio.
  *
- * sessionStorage (no localStorage): se vuelve a mostrar si cierran el
- * navegador y vuelven otro día, pero no cada vez que navegan entre
- * secciones de la misma visita.
+ * sessionStorage (no localStorage): se vuelve a mostrar si cierran el navegador y vuelven otro
+ * día, pero no cada vez que navegan entre secciones de la misma visita.
  */
 export function IntroSplash() {
+  const intro = getLatestIntro()
   const [status, setStatus] = useState<'checking' | 'gate' | 'playing' | 'done'>('checking')
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
+    if (!intro) return
     const seen = typeof window !== 'undefined' && sessionStorage.getItem(SEEN_KEY) === '1'
     setStatus(seen ? 'done' : 'gate')
-  }, [])
+  }, [intro])
 
   function finish() {
     sessionStorage.setItem(SEEN_KEY, '1')
@@ -41,14 +44,14 @@ export function IntroSplash() {
     })
   }
 
-  if (status === 'checking' || status === 'done') return null
+  if (!intro || status === 'checking' || status === 'done') return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
       <video
         ref={videoRef}
-        src="/intro/intro-brokeboirichie.mp4"
-        poster="/intro/intro-poster.jpg"
+        src={intro.video}
+        poster={intro.poster}
         playsInline
         onEnded={finish}
         className={`h-full w-full object-cover transition-opacity duration-700 ${
@@ -60,14 +63,9 @@ export function IntroSplash() {
         <button
           type="button"
           onClick={enter}
-          className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/40 backdrop-blur-sm"
+          className="absolute inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-primary px-8 font-mono text-sm font-medium uppercase tracking-[0.2em] text-primary-foreground shadow-[0_0_40px_rgb(124_102_220/0.5)] transition-transform active:scale-95"
         >
-          <span className="font-display text-3xl font-light uppercase tracking-tight text-foreground sm:text-4xl">
-            Brokeboirichie
-          </span>
-          <span className="rounded-full border border-white/20 px-6 py-3 font-mono text-xs uppercase tracking-[0.2em] text-foreground">
-            Toca para entrar
-          </span>
+          Entrar
         </button>
       )}
 
@@ -75,7 +73,7 @@ export function IntroSplash() {
         <button
           type="button"
           onClick={finish}
-          className="absolute bottom-6 right-6 font-mono text-[11px] uppercase tracking-[0.2em] text-foreground/70 underline-offset-4 hover:underline"
+          className="absolute bottom-8 right-6 font-mono text-[11px] uppercase tracking-[0.22em] text-foreground/70 transition-colors hover:text-foreground"
         >
           Saltar
         </button>

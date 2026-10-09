@@ -1,3 +1,5 @@
+import { ArrowUpRight } from 'lucide-react'
+import { MANAGEMENT_PHONE_DISPLAY, MANAGEMENT_WHATSAPP_URL } from '@/lib/site-data'
 import { CommunityLinks } from '@/components/community-links'
 import { FanPoll } from '@/components/fan-poll'
 
@@ -29,6 +31,24 @@ export function ConnectSection() {
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Canales oficiales</p>
           <CommunityLinks />
         </div>
+      </div>
+
+      <div className="glass mt-6 flex flex-col items-start gap-3 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Marcas, prensa y booking</p>
+          <p className="mt-2 text-pretty text-sm leading-relaxed text-foreground">
+            Fotos para marcas, book y propuestas de colaboración — contacto directo con su management: {MANAGEMENT_PHONE_DISPLAY}
+          </p>
+        </div>
+        <a
+          href={MANAGEMENT_WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-6 font-mono text-xs font-medium uppercase tracking-[0.18em] text-primary-foreground transition-opacity hover:opacity-90"
+        >
+          Escribir por WhatsApp
+          <ArrowUpRight className="size-4" aria-hidden="true" />
+        </a>
       </div>
     </section>
   )

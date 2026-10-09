@@ -5,6 +5,14 @@ export const ONERPM_URL = 'https://onerpm.link/271027579511'
 export const YOUTUBE_URL = 'https://www.youtube.com/@brokeboirichie'
 export const YOUTUBE_SUBSCRIBE_URL = `${YOUTUBE_URL}?sub_confirmation=1`
 
+/**
+ * Contacto de management/booking — NO es el teléfono personal del artista, es el canal de su
+ * manager. Confirmado explícitamente por Ignacio el 2026-10-09. Se publica como vía de contacto
+ * para marcas/prensa/booking, nunca etiquetado como "contacto directo con el artista".
+ */
+export const MANAGEMENT_PHONE_DISPLAY = '+56 9 8488 3373'
+export const MANAGEMENT_WHATSAPP_URL = 'https://wa.me/56984883373'
+
 export type Track = {
   id: string
   title: string
@@ -233,10 +241,9 @@ export const RELEASES: Release[] = [
     title: 'OLD MONEY',
     kind: 'Single',
     year: 'Estreno',
-    meta: 'A confirmar con el artista',
+    meta: 'Videoclip · YouTube',
     cover: '/images/old-money.png',
-    href: YOUTUBE_URL,
-    pending: true,
+    href: 'https://youtu.be/wpBCM6pMbu8',
   },
   {
     id: 'puras-malas',
@@ -275,3 +282,10 @@ export const RELEASES: Release[] = [
     pending: true,
   },
 ]
+
+/**
+ * El primer release real (no `pending`) de la lista. La intro de entrada (components/intro-splash.tsx,
+ * vía lib/intros.ts) siempre muestra el clip del release que esto apunte — al agregar un single
+ * nuevo arriba de `RELEASES`, la intro cambia sola, sin tocar el componente.
+ */
+export const LATEST_RELEASE: Release = RELEASES.find((r) => !r.pending) ?? FEATURED_ALBUM

@@ -5,6 +5,7 @@ import { Catalog } from '@/components/catalog'
 import { DualDeckTurntable } from '@/components/dual-deck-turntable'
 import { VideoSection } from '@/components/video-section'
 import { Lookbook } from '@/components/lookbook'
+import { PhotoGallery } from '@/components/photo-gallery'
 import { ConnectSection } from '@/components/connect-section'
 import { SiteFooter } from '@/components/site-footer'
 import { TurntableProvider } from '@/components/turntable-context'
@@ -23,6 +24,7 @@ export default function Home() {
         <DualDeckTurntable />
         <VideoSection />
         <Lookbook />
+        <PhotoGallery />
         <ConnectSection />
       </main>
       <SiteFooter />

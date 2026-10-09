@@ -59,6 +59,16 @@
   --input: rgb(255 255 255 / 0.12);
   --ring: #7c66dc;
   --radius: 0.75rem;
+
+  /*
+   * Paleta fusión (acordada 2026-10-09): base oscura "Nocturnal Plugg" + acentos Y2K/Winamp que
+   * eligió el artista (Celestite Blue, Mint Aura, Astra Violet) sobre la misma base melancólica.
+   * No se usan como fondo de página — son acentos puntuales (bordes, glows, badges) que le dan el
+   * guiño "Internet 2006" sin perder el tono nocturno ya validado con el sonido del artista.
+   */
+  --y2k-celestite: #00bfff;
+  --y2k-mint: #98ff98;
+  --y2k-astra: #4b0082;
 }
 
 @layer base {
@@ -87,6 +97,14 @@
   }
   .glass {
     @apply border border-white/[0.08] bg-white/[0.02] backdrop-blur-md;
+  }
+  /* Bisel Winamp-Napster 2006 sobre la base oscura: borde iridiscente sutil, sin salir del tono nocturno. */
+  .glass-y2k {
+    @apply border bg-white/[0.02] backdrop-blur-md;
+    border-image: linear-gradient(135deg, var(--y2k-celestite), var(--y2k-mint), var(--y2k-astra)) 1;
+  }
+  .text-y2k-glow {
+    text-shadow: 0 0 12px rgb(0 191 255 / 0.35);
   }
   /* Static grooves — only the transform rotates, so the record stays on the compositor */
   .vinyl-grooves {
