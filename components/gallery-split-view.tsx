@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
-import { ArrowUpRight, Camera } from 'lucide-react'
+import { ArrowUpRight, Camera, ChevronRight } from 'lucide-react'
 import type { GalleryResponse } from '@/lib/gallery'
 
 /**
@@ -14,6 +14,10 @@ import type { GalleryResponse } from '@/lib/gallery'
  *     horizontal PROPIO de esa fila (no crece el scroll de la página).
  *  4. Feed oculto — bento grid asimétrico más abajo con todo el archivo, para scrollear.
  */
+function clamp01(n: number) {
+  return Math.min(1, Math.max(0, n))
+}
+
 export function GallerySplitView({ categories }: { categories: GalleryResponse[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const active = categories[activeIndex]
@@ -23,6 +27,23 @@ export function GallerySplitView({ categories }: { categories: GalleryResponse[]
     () => categories.flatMap((c) => c.photos.map((p) => ({ ...p, categoryLabel: c.label }))),
     [categories],
   )
+
+  // Barra de progreso del scroll horizontal propio de cada galería — la señal visual de que hay
+  // más para ver "si hace scroll" (pedido del artista 2026-10-11), en vez de dejarlo implícito.
+  const stripRef = useRef<HTMLUListElement>(null)
+  const [scrollProgress, setScrollProgress] = useState(0)
+
+  useEffect(() => {
+    setScrollProgress(0)
+    stripRef.current?.scrollTo({ left: 0 })
+  }, [activeIndex])
+
+  function onStripScroll() {
+    const el = stripRef.current
+    if (!el) return
+    const max = el.scrollWidth - el.clientWidth
+    setScrollProgress(max > 0 ? clamp01(el.scrollLeft / max) : 0)
+  }
 
   return (
     <section id="fotos" aria-labelledby="fotos-title" className="scroll-mt-24 py-16 sm:py-24">
@@ -108,35 +129,51 @@ export function GallerySplitView({ categories }: { categories: GalleryResponse[]
                 </span>
               </div>
             ) : (
-              <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
-                {active.photos.map((photo, i) => (
-                  <li
-                    key={photo.id}
-                    className={`w-[46vw] max-w-[220px] shrink-0 snap-start ${i === 0 ? 'w-[min(80vw,420px)] max-w-[420px]' : ''}`}
-                  >
-                    <a
-                      href={photo.href ?? '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group relative block aspect-[4/5] overflow-hidden rounded-xl border border-white/[0.12]"
+              <div className="relative">
+                <ul
+                  ref={stripRef}
+                  onScroll={onStripScroll}
+                  className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [mask-image:linear-gradient(to_right,black_88%,transparent_100%)] [scrollbar-width:thin] [-webkit-mask-image:linear-gradient(to_right,black_88%,transparent_100%)]"
+                >
+                  {active.photos.map((photo, i) => (
+                    <li
+                      key={photo.id}
+                      className={`w-[46vw] max-w-[220px] shrink-0 snap-start ${i === 0 ? 'w-[min(80vw,420px)] max-w-[420px]' : ''}`}
                     >
-                      <Image
-                        src={photo.src}
-                        alt={photo.alt || photo.title || active.label}
-                        fill
-                        unoptimized={photo.remote}
-                        sizes="(min-width: 640px) 40vw, 80vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      {i === 0 && active.photos.length > 1 && (
-                        <span className="absolute bottom-2 right-2 rounded-full bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-foreground backdrop-blur-sm">
-                          Desliza para ver más →
-                        </span>
-                      )}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+                      <a
+                        href={photo.href ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group relative block aspect-[4/5] overflow-hidden rounded-xl border border-white/[0.12]"
+                      >
+                        <Image
+                          src={photo.src}
+                          alt={photo.alt || photo.title || active.label}
+                          fill
+                          unoptimized={photo.remote}
+                          sizes="(min-width: 640px) 40vw, 80vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        {i === 0 && active.photos.length > 1 && (
+                          <span className="absolute bottom-2 right-2 flex items-center gap-0.5 rounded-full bg-background/70 py-1 pl-2 pr-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-foreground backdrop-blur-sm">
+                            Desliza para ver más
+                            <ChevronRight className="gallery-hint-chevron size-3" aria-hidden="true" />
+                          </span>
+                        )}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+
+                {active.photos.length > 1 && (
+                  <div className="mt-2 h-[2px] w-full max-w-[220px] overflow-hidden rounded-full bg-white/[0.1]">
+                    <div
+                      className="h-full rounded-full bg-[var(--y2k-celestite)] transition-[width] duration-150 ease-out"
+                      style={{ width: `${Math.max(8, scrollProgress * 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

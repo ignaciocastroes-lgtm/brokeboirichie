@@ -8,6 +8,8 @@ import { PhotoGallery } from '@/components/photo-gallery'
 import { ConnectSection } from '@/components/connect-section'
 import { SiteFooter } from '@/components/site-footer'
 import { TurntableProvider } from '@/components/turntable-context'
+import { ScrollReveal } from '@/components/scroll-reveal'
+import { AmbientGlow } from '@/components/ambient-glow'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,11 +21,31 @@ export default function Home() {
       <SiteHeader />
       <main className="min-h-dvh">
         <Hero />
-        <VideoSection />
-        <DualDeckTurntable />
-        <BeatsMarketplace />
-        <PhotoGallery />
-        <ConnectSection />
+
+        <ScrollReveal className="relative">
+          <AmbientGlow tone="primary" position="top-left" />
+          <VideoSection />
+        </ScrollReveal>
+
+        <ScrollReveal className="relative">
+          <AmbientGlow tone="celestite" position="top-right" />
+          <DualDeckTurntable />
+        </ScrollReveal>
+
+        <ScrollReveal className="relative">
+          <AmbientGlow tone="astra" position="bottom-left" />
+          <BeatsMarketplace />
+        </ScrollReveal>
+
+        <ScrollReveal className="relative">
+          <AmbientGlow tone="mint" position="top-right" />
+          <PhotoGallery />
+        </ScrollReveal>
+
+        <ScrollReveal className="relative">
+          <AmbientGlow tone="primary" position="bottom-right" />
+          <ConnectSection />
+        </ScrollReveal>
       </main>
       <SiteFooter />
     </TurntableProvider>

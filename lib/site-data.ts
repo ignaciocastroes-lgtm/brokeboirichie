@@ -81,8 +81,7 @@ export const PITCH_MODES = [
 export type Video = { id: string; title: string; subtitle: string }
 
 export const VIDEOS: Video[] = [
-  // [A CONFIRMAR] título real del último estreno — Ignacio: reemplazar antes de publicar.
-  { id: 'HtE1f_ThtUc', title: '[ÚLTIMO ESTRENO — CONFIRMAR TÍTULO]', subtitle: 'Video Oficial · 2026' },
+  { id: 'HtE1f_ThtUc', title: 'Este Año Yo Me Lo Quedo', subtitle: 'Video Oficial · 2026' },
   { id: 'etFPyjR5U8E', title: 'Puras Malas', subtitle: 'Prod. Brokeboirichie' },
   { id: 'gvtANivEW7c', title: 'Empezar Denuevo', subtitle: 'Video Oficial' },
   { id: 'KECl-1VNFco', title: 'Exclusivos', subtitle: 'ft. Kerchak & HWII' },
@@ -160,6 +159,16 @@ export const RELEASES: Release[] = [
     meta: 'Videoclip · YouTube',
     cover: '/images/old-money.png',
     href: 'https://youtu.be/wpBCM6pMbu8',
+  },
+  {
+    // Portada pendiente — Ignacio: agregar el cover real cuando esté listo (queda con el
+    // placeholder "Portada a confirmar" mientras tanto, nunca se inventa una imagen).
+    id: 'este-ano-yo-me-lo-quedo',
+    title: 'ESTE AÑO YO ME LO QUEDO',
+    kind: 'Single',
+    year: 'Estreno',
+    meta: 'Videoclip · YouTube',
+    href: 'https://www.youtube.com/watch?v=HtE1f_ThtUc',
   },
   {
     id: 'puras-malas',
