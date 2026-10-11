@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Pause, Play, X } from 'lucide-react'
 import { BEATS, BEATS_ROYALTY_NOTE, MANAGEMENT_WHATSAPP_URL, type Beat } from '@/lib/site-data'
-import { EqBars } from './dual-deck-turntable'
+import { AudioVisualizer, resumeAudioContextFor } from './audio-visualizer'
 
 /**
  * VENTA DE BEATS — sección nueva (2026-10-11) pensada como el segundo "deck" de la Tornamesa,
@@ -42,6 +42,7 @@ export function BeatsMarketplace() {
     }
     audio.src = beat.src
     audio.currentTime = 0
+    resumeAudioContextFor(audio) // gesto real del usuario — aquí es seguro reanudar el AudioContext
     audio.play().catch(() => setPlayingId(null))
     setPlayingId(beat.id)
   }
@@ -81,7 +82,7 @@ export function BeatsMarketplace() {
             <span className="winamp-dot" />
           </div>
           <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-white/90">Beat Deck</span>
-          <EqBars active={Boolean(playingId)} />
+          <AudioVisualizer audioRef={audioRef} active={Boolean(playingId)} />
         </div>
         <div className="winamp-lcd flex flex-col gap-0.5 px-4 py-3">
           <p className="truncate text-2xl leading-none">{nowPlaying ? nowPlaying.title : 'NO SIGNAL —'}</p>

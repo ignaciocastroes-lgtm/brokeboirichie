@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ArrowUpRight, Camera, ChevronRight } from 'lucide-react'
 import type { GalleryResponse } from '@/lib/gallery'
@@ -10,9 +10,12 @@ import type { GalleryResponse } from '@/lib/gallery'
  *  1. Hero View — fondo a pantalla completa con el arte de la categoría activa, tintado y con
  *     transición suave al cambiar de categoría.
  *  2. Fila de navegación central — grilla horizontal flotante; el ítem activo/foco se agranda.
- *  3. Panel principal — una sola foto visible por defecto por categoría; el resto se ve con scroll
- *     horizontal PROPIO de esa fila (no crece el scroll de la página).
- *  4. Feed oculto — bento grid asimétrico más abajo con todo el archivo, para scrollear.
+ *  3. Panel principal — SOLO el scroll horizontal de fotos de la categoría activa. Pedido explícito
+ *     2026-10-11: "saca archivo visual y solo deja el scroll de la galería" — sin título/intro ni
+ *     feed secundario debajo; el scroll ES la galería.
+ *  4. Foco dinámico real: a medida que se scrollea la fila, la foto centrada/enfocada se ve nítida
+ *     y a tamaño completo, el resto se oscurece y reduce — vía IntersectionObserver por foto
+ *     (ventana horizontal angosta centrada en el contenedor), no solo un efecto de borde.
  */
 function clamp01(n: number) {
   return Math.min(1, Math.max(0, n))
@@ -23,20 +26,55 @@ export function GallerySplitView({ categories }: { categories: GalleryResponse[]
   const active = categories[activeIndex]
   const heroPhoto = active.photos[0] ?? null
 
-  const feed = useMemo(
-    () => categories.flatMap((c) => c.photos.map((p) => ({ ...p, categoryLabel: c.label }))),
-    [categories],
-  )
-
   // Barra de progreso del scroll horizontal propio de cada galería — la señal visual de que hay
   // más para ver "si hace scroll" (pedido del artista 2026-10-11), en vez de dejarlo implícito.
   const stripRef = useRef<HTMLUListElement>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
 
+  // Foto enfocada dentro de la fila activa — la única que se ve clara; el resto se oscurece.
+  const [focusedId, setFocusedId] = useState<string | null>(active.photos[0]?.id ?? null)
+  const photoRefs = useRef(new Map<string, HTMLLIElement>())
+
   useEffect(() => {
     setScrollProgress(0)
+    setFocusedId(active.photos[0]?.id ?? null)
     stripRef.current?.scrollTo({ left: 0 })
-  }, [activeIndex])
+  }, [active.photos])
+
+  useEffect(() => {
+    const root = stripRef.current
+    if (!root || active.photos.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // La foto con mayor fracción visible dentro de la "ventana" central gana el foco.
+        let best: { id: string; ratio: number } | null = null
+        for (const entry of entries) {
+          const id = entry.target.getAttribute('data-photo-id')
+          if (!id) continue
+          if (!best || entry.intersectionRatio > best.ratio) {
+            best = { id, ratio: entry.intersectionRatio }
+          }
+        }
+        if (best && best.ratio > 0) setFocusedId(best.id)
+      },
+      {
+        root,
+        // Ventana angosta centrada en el contenedor: solo la foto que cruza el centro cuenta como
+        // "enfocada", el resto queda afuera del margen y se oscurece.
+        rootMargin: '0px -35% 0px -35%',
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      },
+    )
+
+    for (const node of photoRefs.current.values()) observer.observe(node)
+    return () => observer.disconnect()
+  }, [active.photos])
+
+  const registerPhotoRef = useCallback((id: string, node: HTMLLIElement | null) => {
+    if (node) photoRefs.current.set(id, node)
+    else photoRefs.current.delete(id)
+  }, [])
 
   function onStripScroll() {
     const el = stripRef.current
@@ -47,22 +85,11 @@ export function GallerySplitView({ categories }: { categories: GalleryResponse[]
 
   return (
     <section id="fotos" aria-labelledby="fotos-title" className="scroll-mt-24 py-16 sm:py-24">
-      <div className="mx-auto mb-8 max-w-7xl px-4 sm:px-6 lg:px-8">
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-y2k-glow" style={{ color: 'var(--y2k-celestite)' }}>
-          [Fotos] · Directo desde Flickr
-        </p>
-        <h2
-          id="fotos-title"
-          className="mt-2 text-balance font-display text-5xl font-light uppercase leading-none tracking-tight text-foreground sm:text-6xl"
-        >
-          Archivo visual
-        </h2>
-        <p className="mt-3 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
-          El artista sube y organiza sus propias fotos en Flickr — esta galería se actualiza sola cuando él agrega nuevas.
-        </p>
-      </div>
+      <h2 id="fotos-title" className="sr-only">
+        Fotos
+      </h2>
 
-      {/* HERO VIEW + nav flotante + panel principal con scroll propio */}
+      {/* HERO VIEW + nav flotante + panel principal: solo el scroll de la galería */}
       <div className="relative mx-4 overflow-hidden rounded-3xl border border-white/[0.08] sm:mx-6 lg:mx-8">
         <div className="relative h-[72vh] min-h-[460px] w-full">
           {heroPhoto ? (
@@ -103,7 +130,8 @@ export function GallerySplitView({ categories }: { categories: GalleryResponse[]
             </div>
           </nav>
 
-          {/* Panel principal: 1 foto visible, el resto con scroll horizontal propio */}
+          {/* Panel principal: el scroll horizontal ES la galería — una foto enfocada y clara, el
+              resto oscurecido, hasta que el scroll trae la siguiente al centro. */}
           <div className="absolute inset-x-0 bottom-0 px-4 pb-6 sm:px-8 sm:pb-10">
             <div className="mb-3 flex items-end justify-between gap-4">
               <h3 className="font-display text-3xl font-light uppercase tracking-tight text-foreground sm:text-4xl">
@@ -133,36 +161,45 @@ export function GallerySplitView({ categories }: { categories: GalleryResponse[]
                 <ul
                   ref={stripRef}
                   onScroll={onStripScroll}
-                  className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [mask-image:linear-gradient(to_right,black_88%,transparent_100%)] [scrollbar-width:thin] [-webkit-mask-image:linear-gradient(to_right,black_88%,transparent_100%)]"
+                  className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]"
                 >
-                  {active.photos.map((photo, i) => (
-                    <li
-                      key={photo.id}
-                      className={`w-[46vw] max-w-[220px] shrink-0 snap-start ${i === 0 ? 'w-[min(80vw,420px)] max-w-[420px]' : ''}`}
-                    >
-                      <a
-                        href={photo.href ?? '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative block aspect-[4/5] overflow-hidden rounded-xl border border-white/[0.12]"
+                  {active.photos.map((photo, i) => {
+                    const isFocused = focusedId === photo.id
+                    return (
+                      <li
+                        key={photo.id}
+                        ref={(node) => registerPhotoRef(photo.id, node)}
+                        data-photo-id={photo.id}
+                        className="w-[46vw] max-w-[220px] shrink-0 snap-center first:ml-[27vw] last:mr-[27vw] first:sm:ml-0 last:sm:mr-0"
                       >
-                        <Image
-                          src={photo.src}
-                          alt={photo.alt || photo.title || active.label}
-                          fill
-                          unoptimized={photo.remote}
-                          sizes="(min-width: 640px) 40vw, 80vw"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        {i === 0 && active.photos.length > 1 && (
-                          <span className="absolute bottom-2 right-2 flex items-center gap-0.5 rounded-full bg-background/70 py-1 pl-2 pr-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-foreground backdrop-blur-sm">
-                            Desliza para ver más
-                            <ChevronRight className="gallery-hint-chevron size-3" aria-hidden="true" />
-                          </span>
-                        )}
-                      </a>
-                    </li>
-                  ))}
+                        <a
+                          href={photo.href ?? '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`group relative block aspect-[4/5] overflow-hidden rounded-xl border transition-all duration-500 ease-out ${
+                            isFocused
+                              ? 'scale-100 border-white/[0.18] opacity-100'
+                              : 'scale-[0.92] border-white/[0.06] opacity-45 brightness-[0.45] saturate-50'
+                          }`}
+                        >
+                          <Image
+                            src={photo.src}
+                            alt={photo.alt || photo.title || active.label}
+                            fill
+                            unoptimized={photo.remote}
+                            sizes="(min-width: 640px) 40vw, 80vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          {isFocused && active.photos.length > 1 && (
+                            <span className="absolute bottom-2 right-2 flex items-center gap-0.5 rounded-full bg-background/70 py-1 pl-2 pr-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-foreground backdrop-blur-sm">
+                              Desliza
+                              <ChevronRight className="gallery-hint-chevron size-3" aria-hidden="true" />
+                            </span>
+                          )}
+                        </a>
+                      </li>
+                    )
+                  })}
                 </ul>
 
                 {active.photos.length > 1 && (
@@ -178,34 +215,6 @@ export function GallerySplitView({ categories }: { categories: GalleryResponse[]
           </div>
         </div>
       </div>
-
-      {/* Feed oculto: bento grid asimétrico con todo el archivo disponible */}
-      {feed.length > 0 && (
-        <div className="mx-auto mt-12 max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">Feed completo</p>
-          <ul className="grid auto-rows-[140px] grid-cols-2 gap-3 sm:auto-rows-[160px] sm:grid-cols-4 lg:grid-cols-6">
-            {feed.slice(0, 24).map((photo, i) => (
-              <li key={photo.id} className={i % 7 === 0 ? 'col-span-2 row-span-2' : ''}>
-                <a
-                  href={photo.href ?? '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block size-full overflow-hidden rounded-xl border border-white/[0.08]"
-                >
-                  <Image
-                    src={photo.src}
-                    alt={photo.alt || photo.title || photo.categoryLabel}
-                    fill
-                    unoptimized={photo.remote}
-                    sizes="(min-width: 1024px) 16vw, 45vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </section>
   )
 }
