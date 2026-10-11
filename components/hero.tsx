@@ -31,11 +31,6 @@ export function Hero() {
             </span>
           </h1>
 
-          <p className="max-w-md text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Sonido atmosférico, plugg y dirección estética desde la{' '}
-            <span className="text-foreground">Zona Sur de Santiago</span>.
-          </p>
-
           <div className="flex flex-col gap-3 min-[400px]:flex-row">
             <a
               href={ONERPM_URL}
@@ -47,10 +42,10 @@ export function Hero() {
               Escuchar REX
             </a>
             <a
-              href="#lanzamientos"
+              href="#videos"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/[0.12] px-6 font-mono text-xs uppercase tracking-[0.18em] text-foreground transition-colors hover:border-primary/60"
             >
-              Ver catálogo
+              Ver videos
             </a>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { ArrowUpRight } from 'lucide-react'
-import { DEVELOPER, NAV_LINKS } from '@/lib/site-data'
+import { CONTACT_EMAIL, MANAGEMENT_WHATSAPP_URL, NAV_LINKS } from '@/lib/site-data'
 
 const SPEC_SHEET = [
   { label: 'Artista / Productor', value: 'Brokeboirichie' },
@@ -48,19 +48,27 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-white/[0.08] bg-midnight/20">
-        <a
-          href={DEVELOPER.href}
-          className="group mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"
-        >
-          <span className="font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-muted-foreground">
-            Plataforma de lanzamiento desarrollada por <span className="text-foreground">{DEVELOPER.name}</span>
-          </span>
-          <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-foreground">
-            ¿Eres artista y buscas tu propio hub interactivo?{' '}
-            <span className="text-primary underline-offset-4 group-hover:underline">Conecta aquí</span>
-            <ArrowUpRight className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
-          </span>
-        </a>
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-muted-foreground">
+            <span>Contacto</span>
+            {CONTACT_EMAIL ? (
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-foreground transition-colors hover:text-primary">
+                {CONTACT_EMAIL}
+              </a>
+            ) : (
+              <span className="text-foreground/60">próximamente</span>
+            )}
+          </div>
+          <a
+            href={MANAGEMENT_WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Escribir por WhatsApp
+            <ArrowUpRight className="size-3.5 shrink-0" aria-hidden="true" />
+          </a>
+        </div>
       </div>
     </footer>
   )

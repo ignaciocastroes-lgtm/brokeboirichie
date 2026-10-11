@@ -13,6 +13,36 @@ export const YOUTUBE_SUBSCRIBE_URL = `${YOUTUBE_URL}?sub_confirmation=1`
 export const MANAGEMENT_PHONE_DISPLAY = '+56 9 8488 3373'
 export const MANAGEMENT_WHATSAPP_URL = 'https://wa.me/56984883373'
 
+/**
+ * VENTA DE BEATS — el artista vende instrumentales a otros artistas a cambio de regalías.
+ * Deuda técnica (2026-10-11): generar las 20 muestras reales de 10s con marca de sonido en
+ * /herramientas/marca-de-beats (herramienta interna, no pública — corta el clip y mezcla la marca
+ * de sonido del artista en el navegador, sin subir nada a ningún servidor), guardar el .wav
+ * resultante en /public/beats/<id>.wav y completar bpm/key/price aquí. Con `src: null` la tarjeta
+ * se muestra pero el botón de reproducir queda deshabilitado — nunca se inventa un preview.
+ */
+export type Beat = {
+  id: string
+  title: string
+  bpm?: number
+  key?: string
+  price?: string
+  /** Muestra de 10s con marca de sonido, alojada en /public/beats/ (ver /herramientas/marca-de-beats). null = pendiente. */
+  src: string | null
+}
+
+export const BEATS_ROYALTY_NOTE =
+  'Cada muestra dura 10 segundos y lleva marca de sonido (tag hablado) para proteger el instrumental. Licencias y condiciones de regalías se coordinan directo con el management.'
+
+export const BEATS: Beat[] = Array.from({ length: 20 }, (_, i) => {
+  const n = String(i + 1).padStart(2, '0')
+  return {
+    id: `beat-${n}`,
+    title: `[BEAT ${n} — A CONFIRMAR]`,
+    src: null,
+  }
+})
+
 export type Track = {
   id: string
   title: string
@@ -51,6 +81,8 @@ export const PITCH_MODES = [
 export type Video = { id: string; title: string; subtitle: string }
 
 export const VIDEOS: Video[] = [
+  // [A CONFIRMAR] título real del último estreno — Ignacio: reemplazar antes de publicar.
+  { id: 'HtE1f_ThtUc', title: '[ÚLTIMO ESTRENO — CONFIRMAR TÍTULO]', subtitle: 'Video Oficial · 2026' },
   { id: 'etFPyjR5U8E', title: 'Puras Malas', subtitle: 'Prod. Brokeboirichie' },
   { id: 'gvtANivEW7c', title: 'Empezar Denuevo', subtitle: 'Video Oficial' },
   { id: 'KECl-1VNFco', title: 'Exclusivos', subtitle: 'ft. Kerchak & HWII' },
@@ -59,10 +91,9 @@ export const VIDEOS: Video[] = [
 ]
 
 export const NAV_LINKS = [
-  { label: 'Lanzamientos', href: '#lanzamientos' },
-  { label: 'Tornamesa REX', href: '#tornamesa' },
   { label: 'Videos', href: '#videos' },
-  { label: 'Lookbook', href: '#lookbook' },
+  { label: 'Tornamesa REX', href: '#tornamesa' },
+  { label: 'Venta de Beats', href: '#venta-de-beats' },
   { label: 'Conectar', href: '#conectar' },
 ] as const
 
@@ -75,118 +106,6 @@ export const PLATFORMS = [
 ] as const
 
 export const INSTAGRAM_URL = 'https://www.instagram.com/brokeboirichie/'
-
-export const LOOKBOOK_FILTERS = [
-  { id: 'all', label: 'Todo el archivo' },
-  { id: 'rex', label: 'Era REX Styling' },
-  { id: 'custom', label: 'Custom Pieces & Siberia Collabs' },
-  { id: 'backstage', label: 'Backstage & Zona Sur' },
-] as const
-
-export type LookbookCategory = Exclude<(typeof LOOKBOOK_FILTERS)[number]['id'], 'all'>
-
-export type Look = {
-  id: string
-  number: string
-  title: string
-  category: LookbookCategory
-  image: string
-  alt: string
-  /** Forma en la grilla asimétrica */
-  shape: 'tall' | 'wide' | 'square'
-  pieces: string[]
-  direction: string
-  concept: string
-  /** Id de TRACKS que inspira el look (carga la Tornamesa REX) */
-  trackId: string
-}
-
-/** Reemplazar `image` por las fotos reales de la sesión en /public/images/lookbook/. */
-export const LOOKS: Look[] = [
-  {
-    id: 'look-01',
-    number: 'Look 01',
-    title: 'REX Archive Custom',
-    category: 'rex',
-    image: '/images/lookbook/look-01.png',
-    alt: 'Brokeboirichie con chaqueta de mezclilla negra intervenida bajo un farol nocturno',
-    shape: 'tall',
-    pieces: ['Chaqueta denim negra intervenida a mano', 'Parches decolorados', 'Herrajes plata'],
-    direction: 'Dirección visual: Brokeboirichie · Styling: Persona Errante',
-    concept:
-      'La chaqueta funciona como armadura del disco: desgastada, reparada y aún en pie. Cada parche es un tema de REX cosido sobre la misma prenda.',
-    trackId: 'rex',
-  },
-  {
-    id: 'look-02',
-    number: 'Look 02',
-    title: 'Zona Sur Street Armor',
-    category: 'backstage',
-    image: '/images/lookbook/look-02.png',
-    alt: 'Retrato nocturno en calle de la Zona Sur con chaleco técnico y pasamontañas',
-    shape: 'square',
-    pieces: ['Chaleco técnico acolchado', 'Cargo negro', 'Pasamontañas abierto'],
-    direction: 'Dirección visual: Brokeboirichie · Locación: San Bernardo',
-    concept:
-      'Capas para el frío de la madrugada en la periferia. Ropa funcional que habla del barrio sin disfrazarlo.',
-    trackId: 'ciudad-gotica',
-  },
-  {
-    id: 'look-03',
-    number: 'Look 03',
-    title: 'Drama Visual Era',
-    category: 'custom',
-    image: '/images/lookbook/look-03.png',
-    alt: 'Primer plano con cadenas plateadas y polera pintada a mano con trazos violeta',
-    shape: 'square',
-    pieces: ['Polera blanca pintada a mano', 'Cadenas plata', 'Luz dura cenital'],
-    direction: 'Dirección visual: Brokeboirichie · Pieza única intervenida',
-    concept:
-      'El trazo violeta es la melancolía del plugg hecha pintura: una prenda que no se repite, como un snippet que solo suena una vez.',
-    trackId: 'experiencia-inmersiva',
-  },
-  {
-    id: 'look-04',
-    number: 'Look 04',
-    title: 'Siberia Patchwork Hoodie',
-    category: 'custom',
-    image: '/images/lookbook/look-04.png',
-    alt: 'Detalle de polerón patchwork negro y gris con costuras expuestas e imperdibles',
-    shape: 'tall',
-    pieces: ['Polerón patchwork reconstruido', 'Costuras expuestas', 'Bordado de corona'],
-    direction: 'Colaboración Siberia [A CONFIRMAR CRÉDITOS] · Archivo de autor',
-    concept:
-      'Retazos de prendas viejas unidas en una sola: la misma lógica del sampleo. La corona bordada es el sello REX.',
-    trackId: 'clasico-certificado',
-  },
-  {
-    id: 'look-05',
-    number: 'Look 05',
-    title: 'Home Studio Sessions',
-    category: 'backstage',
-    image: '/images/lookbook/look-05.png',
-    alt: 'Backstage en estudio casero con luz de monitores y audífonos',
-    shape: 'wide',
-    pieces: ['Oversized negro', 'Audífonos de estudio', 'Luz de monitor'],
-    direction: 'Fotografía documental · Backstage REX',
-    concept: 'Donde nace el sonido. Sin styling forzado: la ropa con la que se graba a las 4 AM.',
-    trackId: 'acme-freestyle',
-  },
-  {
-    id: 'look-06',
-    number: 'Look 06',
-    title: 'Persona Errante',
-    category: 'rex',
-    image: '/images/lookbook/look-06.png',
-    alt: 'Figura solitaria con abrigo largo caminando por un paso sobre nivel en la niebla',
-    shape: 'tall',
-    pieces: ['Abrigo largo negro', 'Jeans wide leg', 'Botas gastadas'],
-    direction: 'Dirección visual: Brokeboirichie · Still cinematográfico',
-    concept:
-      'El personaje que camina la ciudad de noche buscando sanar. Silueta larga, paso lento, como un tema slowed.',
-    trackId: 'empezar-denuevo',
-  },
-]
 
 export const POLL_ERAS = [
   { id: 'rex', label: 'REX' },
@@ -204,11 +123,8 @@ export const COMMUNITY = [
   { name: 'Apple Music', handle: 'REX · 2025', action: 'Escuchar', href: APPLE_MUSIC_URL },
 ] as const
 
-/** Editar con los datos de la agencia/plataforma desarrolladora. */
-export const DEVELOPER = {
-  name: '[NOMBRE DE TU PLATAFORMA]',
-  href: 'mailto:contacto@tuplataforma.com',
-}
+/** Correo de contacto público (prensa / marcas / booking general). Confirmado 2026-10-11. */
+export const CONTACT_EMAIL: string | null = 'brokeboirichiebeats@gmail.com'
 
 export type Release = {
   id: string

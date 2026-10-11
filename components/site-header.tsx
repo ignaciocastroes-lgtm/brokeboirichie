@@ -26,9 +26,6 @@ export function SiteHeader() {
           <span className="font-display text-xl font-semibold tracking-[0.08em] text-foreground sm:text-2xl">
             BROKEBOIRICHIE
           </span>
-          <span className="mt-1 font-mono text-[10px] tracking-[0.28em] text-muted-foreground">
-            MÚSICA PARA SANAR EL ALMA
-          </span>
         </a>
 
         <nav aria-label="Principal" className="hidden lg:block">

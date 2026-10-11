@@ -1,10 +1,9 @@
 import { IntroSplash } from '@/components/intro-splash'
 import { SiteHeader } from '@/components/site-header'
 import { Hero } from '@/components/hero'
-import { Catalog } from '@/components/catalog'
 import { DualDeckTurntable } from '@/components/dual-deck-turntable'
+import { BeatsMarketplace } from '@/components/beats-marketplace'
 import { VideoSection } from '@/components/video-section'
-import { Lookbook } from '@/components/lookbook'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { ConnectSection } from '@/components/connect-section'
 import { SiteFooter } from '@/components/site-footer'
@@ -20,10 +19,9 @@ export default function Home() {
       <SiteHeader />
       <main className="min-h-dvh">
         <Hero />
-        <Catalog />
-        <DualDeckTurntable />
         <VideoSection />
-        <Lookbook />
+        <DualDeckTurntable />
+        <BeatsMarketplace />
         <PhotoGallery />
         <ConnectSection />
       </main>

@@ -8,13 +8,11 @@ import { useTurntable } from './turntable-context'
 import { Vinyl } from './vinyl'
 
 /**
- * DUAL DECK + CROSSFADER REAL — Audio 100% real, cero MP3 que subir a mano.
- * -----------------------------------------------------------------------
- * Los dos decks consumen /api/tracks (Route Handler que llama a la API
- * pública de iTunes Lookup del álbum REX y devuelve previewUrl reales de
- * 30s). Cada deck tiene su propio <audio>, su propio pitch (playbackRate)
- * y el crossfader mueve el volumen de A y B con la misma matemática de un
- * mixer de DJ.
+ * TORNAMESA REX — Audio 100% real, cero MP3 que subir a mano.
+ * -------------------------------------------------------------
+ * El deck consume /api/tracks (Route Handler que llama a la API pública de
+ * iTunes Lookup del álbum REX y devuelve previewUrl reales de 30s). Tiene
+ * su propio <audio> y su propio pitch (playbackRate).
  *
  * Si la API de Apple falla (caída puntual / rate limit), el deck lo avisa
  * y deja el botón "Escuchar completa" como alternativa — no inventa audio.
@@ -27,11 +25,15 @@ import { Vinyl } from './vinyl'
  * SKIN (2026-10-09): chasis estilo Winamp/Napster clásico (clases `winamp-*`
  * de app/globals.css) sobre la base Nocturnal Plugg — es solo la capa
  * visual, toda la lógica de audio de arriba queda intacta.
+ *
+ * (2026-10-11): se dejó un solo deck en esta sección a pedido del artista —
+ * el segundo deck del mismo molde (useDeck/DeckPanel, ambos exportados) se
+ * reutiliza en components/beats-marketplace.tsx para la Venta de Beats.
  */
 
-type DeckId = 'A' | 'B'
+export type DeckId = 'A' | 'B'
 
-function useDeck(deckId: DeckId, tracks: ItunesTrack[], initialIndex: number) {
+export function useDeck(deckId: DeckId, tracks: ItunesTrack[], initialIndex: number) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [index, setIndex] = useState(initialIndex)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -75,7 +77,7 @@ function useDeck(deckId: DeckId, tracks: ItunesTrack[], initialIndex: number) {
 }
 
 /** 5 barras tipo ecualizador de Winamp — solo se mueven mientras el deck suena. */
-function EqBars({ active }: { active: boolean }) {
+export function EqBars({ active }: { active: boolean }) {
   const delays = [0, 0.12, 0.06, 0.18, 0.09]
   return (
     <div className="flex h-4 items-end gap-[3px]" aria-hidden="true">
@@ -95,7 +97,7 @@ function EqBars({ active }: { active: boolean }) {
   )
 }
 
-function DeckPanel({ deck, label, tracks }: { deck: ReturnType<typeof useDeck>; label: string; tracks: ItunesTrack[] }) {
+export function DeckPanel({ deck, label, tracks }: { deck: ReturnType<typeof useDeck>; label: string; tracks: ItunesTrack[] }) {
   const activeMode = PITCH_MODES.find((m) => m.rate === deck.rate) ?? PITCH_MODES[1]
   const canPlay = Boolean(deck.track?.previewUrl)
 
@@ -202,11 +204,10 @@ export function DualDeckTurntable() {
   }, [])
 
   const deckA = useDeck('A', tracks ?? [], 0)
-  const deckB = useDeck('B', tracks ?? [], 1)
 
-  // Cuando el Catálogo o el Lookbook piden cargar una canción ("Tornamesa"),
-  // el contexto compartido actualiza trackId y hace scroll hasta acá — el
-  // Deck A toma esa canción automáticamente.
+  // Cuando el Catálogo pide cargar una canción ("Tornamesa"), el contexto
+  // compartido actualiza trackId y hace scroll hasta acá — el deck toma esa
+  // canción automáticamente.
   useEffect(() => {
     if (!tracks) return
     const idx = tracks.findIndex((t) => t.id === trackId)
@@ -214,22 +215,12 @@ export function DualDeckTurntable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trackId, tracks])
 
-  const [crossfader, setCrossfader] = useState(0)
-
-  function handleCrossfader(value: number) {
-    setCrossfader(value)
-    const volA = Math.min(1, 1 - Math.max(0, value))
-    const volB = Math.min(1, 1 + Math.min(0, value))
-    if (deckA.audioRef.current) deckA.audioRef.current.volume = volA
-    if (deckB.audioRef.current) deckB.audioRef.current.volume = volB
-  }
-
   return (
-    <section id="tornamesa" aria-labelledby="dual-deck-title" className="mx-auto max-w-5xl scroll-mt-20 px-4 py-16 sm:px-6">
+    <section id="tornamesa" aria-labelledby="dual-deck-title" className="mx-auto max-w-2xl scroll-mt-20 px-4 py-16 sm:px-6">
       <header className="mb-8">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">REX Deck · Mezclador de 2 canales</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">REX Deck</p>
         <h2 id="dual-deck-title" className="mt-2 font-display text-4xl font-light uppercase tracking-tight text-foreground sm:text-5xl">
-          Mezclador en vivo
+          Tornamesa en vivo
         </h2>
         <p className="mt-2 max-w-md font-mono text-[11px] text-muted-foreground">
           Previews oficiales de 30s servidos en vivo desde Apple Music — nada subido a mano.
@@ -245,45 +236,7 @@ export function DualDeckTurntable() {
         </p>
       )}
 
-      {tracks && (
-        <>
-          <div className="grid gap-6 md:grid-cols-2">
-            <DeckPanel deck={deckA} label="A" tracks={tracks} />
-            <DeckPanel deck={deckB} label="B" tracks={tracks} />
-          </div>
-
-          <div className="winamp-shell mt-6 overflow-hidden">
-            <div className="winamp-titlebar">
-              <div className="winamp-dots">
-                <span className="winamp-dot" />
-                <span className="winamp-dot" />
-                <span className="winamp-dot" />
-              </div>
-              <span className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-white/90">Mixer</span>
-              <span className="font-mono text-[10px] text-white/70">v1.0</span>
-            </div>
-            <div className="flex flex-col items-center gap-3 p-5">
-              <div className="winamp-lcd w-full max-w-xs px-3 py-1.5 text-center text-lg">
-                CROSSFADER {crossfader === 0 ? 'CENTER' : crossfader < 0 ? `A ${Math.round(-crossfader * 100)}%` : `B ${Math.round(crossfader * 100)}%`}
-              </div>
-              <div className="flex w-full max-w-md items-center gap-4">
-                <span className="font-mono text-xs text-muted-foreground">A</span>
-                <input
-                  type="range"
-                  min={-1}
-                  max={1}
-                  step={0.01}
-                  value={crossfader}
-                  onChange={(e) => handleCrossfader(Number(e.target.value))}
-                  aria-label="Crossfader entre Deck A y Deck B"
-                  className="winamp-range w-full"
-                />
-                <span className="font-mono text-xs text-muted-foreground">B</span>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      {tracks && <DeckPanel deck={deckA} label="A" tracks={tracks} />}
     </section>
   )
 }
